@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/semak"
+  to = "/.netlify/functions/semak"
+  status = 200
+  force = true
