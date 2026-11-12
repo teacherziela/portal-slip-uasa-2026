@@ -42,14 +42,6 @@ footer{text-align:center;color:#6b6d7a;font-size:12px;padding:25px}
 <footer>Portal demonstrasi UASA 2026 • SMK Taman Jasmin 2 • Keputusan sebenar belum disambungkan</footer>
 <script>
 'use strict';
-// Synthetic preview only. Never add actual IC numbers, student marks or keys here.
-const demo={ic:'000000000000',nama:'MURID CONTOH (BUKAN REKOD SEBENAR)',kelas:'2 CONTOH',guru:'GURU KELAS CONTOH',ulasan:'Teruskan usaha dan tingkatkan prestasi akademik.',subjek:[
-{kod:'BM',nama:'BAHASA MELAYU',markah:82,gred:'A'},
-{kod:'BI',nama:'BAHASA INGGERIS',markah:76,gred:'B'},
-{kod:'MAT',nama:'MATEMATIK',markah:91,gred:'A'},
-{kod:'SEJ',nama:'SEJARAH',markah:74,gred:'B'},
-{kod:'SN',nama:'SAINS',markah:68,gred:'B'},
-{kod:'GEO',nama:'GEOGRAFI',markah:60,gred:'C'}]};
 const el=id=>document.getElementById(id);
 const put=(id,value)=>{el(id).textContent=String(value??'');};
 function addSummary(label,value){const d=document.createElement('div'),a=document.createElement('span'),b=document.createElement('strong');a.textContent=label;b.textContent=value;d.append(a,b);el('summary').append(d);}
@@ -61,6 +53,24 @@ const row=document.createElement('div');row.className='barrow';const label=docum
 const sum=d.subjek.reduce((a,s)=>a+s.markah,0),avg=sum/d.subjek.length;
 addSummary('JUMLAH MARKAH',sum.toFixed(2));addSummary('PURATA %',avg.toFixed(2));addSummary('GRED PURATA','— (DEMO)');addSummary('KEPUTUSAN','CONTOH SAHAJA');addSummary('KEDUDUKAN DALAM KELAS','— (DEMO)');addSummary('ANALISIS','BUKAN KEPUTUSAN RASMI');addSummary('KEDUDUKAN DALAM TINGKATAN','— (DEMO)');
 const order=[...d.subjek].sort((a,b)=>b.markah-a.markah);put('best',order[0].nama+' ('+order[0].markah+')');put('lowest',order.at(-1).nama+' ('+order.at(-1).markah+')');el('results').style.display='block';}
-el('lookup').addEventListener('submit',e=>{e.preventDefault();const ic=el('ic').value.replace(/\D/g,'');el('results').style.display='none';if(!/^\d{12}$/.test(ic)){put('message','Sila masukkan IC 12 digit.');return}if(ic!==demo.ic){put('message','Rekod tidak ditemui. Portal ini masih menggunakan data contoh sahaja.');return}put('message','');render(demo);});
+el('lookup').addEventListener('submit',async e=>{
+e.preventDefault();
+const ic=el('ic').value.replace(/\D/g,'');
+el('results').style.display='none';
+if(!/^\d{12}$/.test(ic)){put('message','Sila masukkan IC 12 digit.');return;}
+const button=el('lookup').querySelector('button');
+button.disabled=true;button.textContent='Sedang menyemak...';
+put('message','');
+try {
+  const response=await fetch('/api/semak',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ic}),cache:'no-store'});
+  const result=await response.json();
+  if(!response.ok||!result.ok){put('message',result.mesej||'Semakan belum tersedia.');return;}
+  render(result.data);
+} catch(err) {
+  put('message','Sambungan gagal. Cuba semula kemudian.');
+} finally {
+  button.disabled=false;button.textContent='Semak Keputusan';
+}
+});
 el('print').addEventListener('click',()=>window.print());
 </script></body></html>
